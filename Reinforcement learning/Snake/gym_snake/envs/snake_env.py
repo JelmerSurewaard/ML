@@ -5,6 +5,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gym_snake.envs.snake import Controller
 import logging
+import Rewards
 
 try:
     import matplotlib.pyplot as plt
@@ -34,7 +35,7 @@ class SnakeEnv(gym.Env):
     BODY = 2
     HEAD_BASE = 3
 
-    def __init__(self, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_snakes=1, n_foods=1, random_init=True):
+    def __init__(self, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_snakes=1, n_foods=1, random_init=True, reward_function=Rewards.test_reward):
         self.grid_size = grid_size
         self.unit_size = unit_size
         self.unit_gap = unit_gap
@@ -44,6 +45,9 @@ class SnakeEnv(gym.Env):
         self.n_foods = n_foods
         self.viewer = None
         self.action_space = spaces.Discrete(4)
+        
+        self.reward_function = reward_function
+        
         if self.coordinate_based:
             if self.n_snakes == 1:
                 self.observation_space = spaces.Box(low=0, high=self.HEAD_BASE+self.n_snakes-1, shape=(self.grid_size[1], self.grid_size[0]), dtype=np.uint8)  # first y-axis then x-axis for matrix to resemble drawing; '+1 to store current snake'
@@ -84,7 +88,7 @@ class SnakeEnv(gym.Env):
         ###    print(self.time_step)
         return coordstate
 
-    def step(self, action, reward_function):
+    def step(self, action):
         # the action passed to step if for the "current" snake; change it to a list with NOMOVE for the other snakes
         if self.n_snakes > 1:
             actions = np.ones(self.n_snakes) * self.NOMOVE
@@ -105,7 +109,7 @@ class SnakeEnv(gym.Env):
             ###print('next snake player {}'.format(self.current_snake))
         self.time_step += 1
         
-        rewards = reward_function()
+        rewards = self.reward_function(rewards, self.time_step)
         
         if self.coordinate_based:
             return coord_obs, rewards, done, info
