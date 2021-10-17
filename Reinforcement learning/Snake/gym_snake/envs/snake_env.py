@@ -5,7 +5,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gym_snake.envs.snake import Controller
 import logging
-import Rewards
+import rewards
 
 try:
     import matplotlib.pyplot as plt
@@ -35,7 +35,7 @@ class SnakeEnv(gym.Env):
     BODY = 2
     HEAD_BASE = 3
 
-    def __init__(self, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_snakes=1, n_foods=1, random_init=True, reward_function=Rewards.test_reward):
+    def __init__(self, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_snakes=1, n_foods=1, random_init=True, reward_function=rewards.test_reward):
         self.grid_size = grid_size
         self.unit_size = unit_size
         self.unit_gap = unit_gap
