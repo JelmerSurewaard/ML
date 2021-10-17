@@ -10,4 +10,7 @@ def surviving_reward(event, step_amount):
     return (step_amount * 100)
 
 def food_reward(event, step_amount):
-    return (step_amount * 100) + (event * 50000)
+    if event == 1:
+        return 50
+    return 0
+    

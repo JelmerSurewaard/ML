@@ -14,10 +14,10 @@ class Grid():
 
     BODY_COLOR = np.array([1,0,0], dtype=np.uint8)
     HEAD_COLOR = np.array([255, 0, 0], dtype=np.uint8)
-    FOOD_COLOR = np.array([0,0,255], dtype=np.uint8)
-    SPACE_COLOR = np.array([0,255,0], dtype=np.uint8)
+    FOOD_COLOR = np.array([0,0,0], dtype=np.uint8)
+    SPACE_COLOR = np.array([255,255,255], dtype=np.uint8)
 
-    def __init__(self, grid_size=[30,30], unit_size=10, unit_gap=1):
+    def __init__(self, agent_colors, grid_size=[30,30], unit_size=10, unit_gap=1):
         """
         grid_size - tuple, list, or ndarray specifying number of atomic units in
                     both the x and y direction
@@ -33,6 +33,8 @@ class Grid():
         self.grid = np.zeros((height, width, channels), dtype=np.uint8)
         self.grid[:,:,:] = self.SPACE_COLOR
         self.open_space = grid_size[0]*grid_size[1]
+        
+        self.agent_colors = agent_colors
 
     def check_death(self, head_coord):
         """
@@ -128,12 +130,12 @@ class Grid():
         prev_coord = None
         for i in range(len(snake.body)):
             coord = snake.body.popleft()
-            self.draw(coord, self.BODY_COLOR)
+            self.draw(coord, head_color)
             if prev_coord is not None:
-                self.connect(prev_coord, coord, self.BODY_COLOR)
+                self.connect(prev_coord, coord, head_color)
             snake.body.append(coord)
             prev_coord = coord
-        self.connect(prev_coord, snake.head, self.BODY_COLOR)
+        self.connect(prev_coord, snake.head, head_color)
 
     def erase(self, coord):
         """
@@ -243,4 +245,9 @@ class Grid():
         """
 
         color = self.color_of(coord)
-        return np.array_equal(color, self.BODY_COLOR) or color[0] == self.HEAD_COLOR[0]
+        
+        for acolor in self.agent_colors:
+            if np.array_equal(color, acolor):
+                return True
+        
+        return False
