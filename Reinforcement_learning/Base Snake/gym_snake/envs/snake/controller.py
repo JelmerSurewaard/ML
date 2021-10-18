@@ -74,17 +74,8 @@ class Controller():
         # Check for death of snake
         if self.grid.check_death(snake.head):
             self.dead_snakes[snake_idx] = self.snakes[snake_idx]
-            # if-clause added specifically for turn-based snake, in case of a head/head collision
-            # in that specific case the color of coord should remain the head of the non-moved snake
-            head_head_collison = False
-            for sn_i in range(len(self.snakes)):
-                if type(self.snakes[sn_i]) != type(None) and np.array_equal(self.snakes[sn_i].head, snake.head) and sn_i != snake_idx:  # head/head collision!
-                    head_head_collison = True
-                    ###print("head-head collision!!")
-                    ###print('snake_idx {}, type(sn_i.head) {}, sn_i.head {}, snake.head {}'.format(snake_idx, type(self.snakes[sn_i].head), self.snakes[sn_i].head, snake.head))         
             self.snakes[snake_idx] = None
-            if not head_head_collison:
-                self.grid.cover(snake.head, snake.head_color) # Avoid miscount of grid.open_space
+            self.grid.cover(snake.head, snake.head_color) # Avoid miscount of grid.open_space
             self.grid.connect(snake.body.popleft(), snake.body[0], self.grid.SPACE_COLOR)
             reward = -1
         # Check for reward

@@ -58,7 +58,7 @@ class SnakeEnv(gym.Env):
 
     # transform from pixel-based to coordinate-based and add current snake
     # note that 'current snake' is the snake that will do the *next* action
-    def to_coord(self, state, done):
+    def to_coord(self, state):
         state = state[0::self.unit_size]
         state = [ state[i][0::self.unit_size] for i in range(len(state)) ]
         coordstate = np.zeros(self.grid_size)
@@ -76,8 +76,7 @@ class SnakeEnv(gym.Env):
                 else:
                     assert True, "unexpected state"
         last_row = np.zeros(self.grid_size[0])
-        if not done:  # if done, current snake is set to 0
-            last_row[0] = self.current_snake
+        last_row[0] = self.current_snake
         if self.n_snakes > 1:
             coordstate = np.vstack([coordstate, last_row])
         ###print(self.time_step); print(coordstate)
@@ -93,7 +92,7 @@ class SnakeEnv(gym.Env):
             action = actions.tolist()
             ###print('self.current_snake {}, action {}'.format(self.current_snake, action))
         self.last_obs, rewards, done, info = self.controller.step(action)
-        coord_obs = self.to_coord(self.last_obs, done)
+        coord_obs = self.to_coord(self.last_obs)
         if self.n_snakes > 1:
             # next *alive* snake gets the turn
             for i in range(self.n_snakes):
@@ -115,7 +114,7 @@ class SnakeEnv(gym.Env):
         self.controller = Controller(self.grid_size, self.unit_size, self.unit_gap, self.snake_size, self.n_snakes, self.n_foods, random_init=self.random_init)
         self.last_obs = self.controller.grid.grid.copy()
         self.current_snake = self.HEAD_BASE  # turn-based multi-player snake
-        coord_obs = self.to_coord(self.last_obs, False)
+        coord_obs = self.to_coord(self.last_obs)
         if self.coordinate_based:        
             return coord_obs
         else:  # pixel-based
