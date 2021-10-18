@@ -5,7 +5,6 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gym_snake.envs.snake import Controller
 import logging
-import rewards
 
 try:
     import matplotlib.pyplot as plt
@@ -35,19 +34,16 @@ class SnakeEnv(gym.Env):
     BODY = 2
     HEAD_BASE = 3
 
-    def __init__(self, agents, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_foods=1, random_init=True):
+    def __init__(self, grid_size=[15,15], unit_size=10, unit_gap=1, snake_size=3, n_snakes=1, n_foods=1, random_init=True):
         self.grid_size = grid_size
         self.unit_size = unit_size
         self.unit_gap = unit_gap
         self.snake_size = snake_size
-        self.n_snakes = len(agents)
+        self.n_snakes = n_snakes
         self.coordinate_based = True
         self.n_foods = n_foods
         self.viewer = None
         self.action_space = spaces.Discrete(4)
-        
-        self.agents = agents
-        
         if self.coordinate_based:
             if self.n_snakes == 1:
                 self.observation_space = spaces.Box(low=0, high=self.HEAD_BASE+self.n_snakes-1, shape=(self.grid_size[1], self.grid_size[0]), dtype=np.uint8)  # first y-axis then x-axis for matrix to resemble drawing; '+1 to store current snake'
@@ -62,7 +58,7 @@ class SnakeEnv(gym.Env):
 
     # transform from pixel-based to coordinate-based and add current snake
     # note that 'current snake' is the snake that will do the *next* action
-    def to_coord(self, state):
+    def to_coord(self, state, done):
         state = state[0::self.unit_size]
         state = [ state[i][0::self.unit_size] for i in range(len(state)) ]
         coordstate = np.zeros(self.grid_size)
@@ -80,8 +76,8 @@ class SnakeEnv(gym.Env):
                 else:
                     assert True, "unexpected state"
         last_row = np.zeros(self.grid_size[0])
-        # OLD TURN BASED MULTIPLAYER LOGIC
-        #last_row[0] = self.current_snake
+        if not done:  # if done, current snake is set to 0
+            last_row[0] = self.current_snake
         if self.n_snakes > 1:
             coordstate = np.vstack([coordstate, last_row])
         ###print(self.time_step); print(coordstate)
@@ -89,71 +85,43 @@ class SnakeEnv(gym.Env):
         ###    print(self.time_step)
         return coordstate
 
-    def step(self, actions): 
-
-        self.last_obs, rewards, done, info = self.controller.step(actions)
-        coord_obs = self.to_coord(self.last_obs)
-        #print(coord_obs)
+    def step(self, action):
+        # the action passed to step if for the "current" snake; change it to a list with NOMOVE for the other snakes
+        if self.n_snakes > 1:
+            actions = np.ones(self.n_snakes) * self.NOMOVE
+            actions[self.current_snake - self.HEAD_BASE] = action
+            action = actions.tolist()
+            ###print('self.current_snake {}, action {}'.format(self.current_snake, action))
+        self.last_obs, rewards, done, info = self.controller.step(action)
+        coord_obs = self.to_coord(self.last_obs, done)
+        if self.n_snakes > 1:
+            # next *alive* snake gets the turn
+            for i in range(self.n_snakes):
+                self.current_snake += 1  # change current snake *after* taking action
+                temp = self.current_snake - self.HEAD_BASE
+                temp %= self.n_snakes
+                self.current_snake = temp + self.HEAD_BASE
+                if self.current_snake in coord_obs:
+                    break
+            ###print('next snake player {}'.format(self.current_snake))
         self.time_step += 1
-        
-        for agent in self.agents:
-            if agent.id in rewards:
-                rewards[agent.id] = agent.reward_function(rewards[agent.id], self.time_step)
-        
-        # for snake_id, reward in rewards.items():
-        #     rewards[snake_id] = self.reward_function(reward, self.time_step)
-        
         if self.coordinate_based:
             return coord_obs, rewards, done, info
         else:  # pixel-based
             return self.last_obs, rewards, done, info
 
-        #####################################
-        #    OLD TURN BASED MULTIPLAYER LOGIC
-        #####################################
-        
-        # # the action passed to step if for the "current" snake; change it to a list with NOMOVE for the other snakes
-        # if self.n_snakes > 1:
-        #     actions = np.ones(self.n_snakes) * self.NOMOVE
-        #     actions[self.current_snake - self.HEAD_BASE] = action
-        #     action = actions.tolist()
-        #     ###print('self.current_snake {}, action {}'.format(self.current_snake, action))
-        # self.last_obs, rewards, done, info = self.controller.step(action)
-        # coord_obs = self.to_coord(self.last_obs)
-        # if self.n_snakes > 1:
-        #     # next *alive* snake gets the turn
-        #     for i in range(self.n_snakes):
-        #         self.current_snake += 1  # change current snake *after* taking action
-        #         temp = self.current_snake - self.HEAD_BASE
-        #         temp %= self.n_snakes
-        #         self.current_snake = temp + self.HEAD_BASE
-        #         if self.current_snake in coord_obs:
-        #             break
-        #     ###print('next snake player {}'.format(self.current_snake))
-        # self.time_step += 1
-        
-        # rewards = self.reward_function(rewards, self.time_step)
-        
-        # if self.coordinate_based:
-        #     return coord_obs, rewards, done, info
-        # else:  # pixel-based
-        #     return self.last_obs, rewards, done, info
-
     def reset(self):
         self.time_step = 0
-        self.controller = Controller(self.agents, self.grid_size, self.unit_size, self.unit_gap, self.snake_size, self.n_foods, random_init=self.random_init)
-        
+        self.controller = Controller(self.grid_size, self.unit_size, self.unit_gap, self.snake_size, self.n_snakes, self.n_foods, random_init=self.random_init)
         self.last_obs = self.controller.grid.grid.copy()
-        
-        #self.current_snake = self.HEAD_BASE  # turn-based multi-player snake
-        
-        coord_obs = self.to_coord(self.last_obs)
+        self.current_snake = self.HEAD_BASE  # turn-based multi-player snake
+        coord_obs = self.to_coord(self.last_obs, False)
         if self.coordinate_based:        
             return coord_obs
         else:  # pixel-based
             return self.last_obs
 
-    def render(self, mode='human', close=False, frame_speed=1):
+    def render(self, mode='human', close=False, frame_speed=.1):
         if self.viewer is None:
             self.fig = plt.figure()
             self.viewer = self.fig.add_subplot(111)

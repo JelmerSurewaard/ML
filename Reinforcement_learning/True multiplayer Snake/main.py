@@ -20,25 +20,20 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-agent1 = Agent('test1', (0, 255, 0), rewards.food_reward)
+agent1 = Agent('Food_reward_1', (0, 255, 0), rewards.food_reward)
 
 agents = [agent1]
 
 env = SnakeEnv(agents, grid_size=[10, 10], snake_size=3)
 
-agent1.train(env, 1000)
+agent1.train(env, 1000000)
 
 for i in range(3):
     obs = env.reset()  # construct instance of game
     done = False
     log.info("start game")
-    while not done:
-        actions = []
-        for agent in agents:
-            actions.append((agent.id, agent.get_action()))
-        
-        obs, reward, done, info = env.step(actions)  # pass action to step()
-        print(reward)
+    while not done:        
+        obs, reward, done, info = env.step([agent1.get_action(obs)])  # pass action to step()
         env.render()
         
 env.close()

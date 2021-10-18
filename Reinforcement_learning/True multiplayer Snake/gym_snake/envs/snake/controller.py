@@ -89,12 +89,9 @@ class Controller():
 
         snake = self.snakes[snake_id]
         if snake is None:
-            print('Move result snake is None')
             return 0
 
         # Check for death of snake
-        # TODO CHECK DEATH USES SNAKE COLOR TO SEE IF SNAKE DIES
-        # NEED TO FIX THIS
         if self.grid.check_death(snake.head):
             # Avoid miscount of grid.open_space
             self.grid.cover(snake.head, snake.color)
@@ -104,7 +101,6 @@ class Controller():
             self.kill_snake(snake_id)
             
             reward = -1
-            print('move result kills snake')
             
         # Check for reward
         elif self.grid.food_space(snake.head):
@@ -154,31 +150,42 @@ class Controller():
             return self.grid.grid.copy(), [0]*len(actions), True, {"snakes_remaining": self.snakes_remaining}
         
         rewards = {}
-        next_positions = {}
-        
-        for action in actions:
-            snake_id, direction = action
-            
+    
+        if type(actions) is np.int32 or type(actions) is np.int64:
+            snake_id = list(self.snakes.keys())[0]
             if self.snakes[snake_id] is None:
                 # Snake is dead
-                self.kill_snake(snake_id)
+                self.kill_snake()
             else:
                 # Snake is alive
-                next_pos = self.move_snake(direction, snake_id)
-                
-                if next_pos is None:
-                    print('next_pos is None')
-                    continue
-                
-                for snake_id_temp, pos in next_positions.items():
-                    if np.array_equal(next_pos, pos):
-                        print('Killing: ', snake_id, ' & ', snake_id_temp)
-                        self.kill_snake(snake_id)
-                        self.kill_snake(snake_id_temp)
-                        
-                next_positions[snake_id] = next_pos
-                
-                rewards[snake_id] = self.move_result(snake_id)                   
+                next_pos = self.move_snake(actions, snake_id)
+                rewards[snake_id] = self.move_result(snake_id)  
+        else:
+        
+            next_positions = {}
+
+            for action in actions:
+                snake_id, direction = action
+
+                if self.snakes[snake_id] is None:
+                    # Snake is dead
+                    self.kill_snake(snake_id)
+                else:
+                    # Snake is alive
+                    next_pos = self.move_snake(direction, snake_id)
+
+                    if next_pos is None:
+                        continue
+                    
+                    for snake_id_temp, pos in next_positions.items():
+                        if np.array_equal(next_pos, pos):
+                            print('Killing: ', snake_id, ' & ', snake_id_temp)
+                            self.kill_snake(snake_id)
+                            self.kill_snake(snake_id_temp)
+
+                    next_positions[snake_id] = next_pos
+
+                    rewards[snake_id] = self.move_result(snake_id)                   
         
         done = self.snakes_remaining < 1 or self.grid.open_space < 1
         
