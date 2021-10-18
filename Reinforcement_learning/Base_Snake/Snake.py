@@ -22,12 +22,12 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-agent = RL_Agent("stink slang")
+agent = RL_Agent("Death Food Punishment, expo_rate 0.001", 0.001)
 
-env = SnakeEnv(grid_size=[10, 10], snake_size=3, reward_func=rewards.food_reward)
+env = SnakeEnv(grid_size=[8, 8], snake_size=3, reward_func=rewards.death_food_punishment)
 
-#agent.train(env, timesteps=1000000)
-agent.continue_training(env, 5000000)
+agent.train(env, timesteps=10000000)
+#agent.train_existing_model(env, 100000)
 #agent.load()
 obs = env.reset()  # construct instance of game
 done = False

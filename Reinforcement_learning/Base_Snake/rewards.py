@@ -18,4 +18,36 @@ def food_reward(event, step_amount, apple_count):
         return -250
     return 0
 
+def food_reward_v2(event, step_amount, apple_count):
+    if event == 1:
+        return apple_count * 100
+    if event == -1:
+        return -250
+    return 0
 
+def food_reward_v3(event, step_amount, apple_count):
+    if event == 1:
+        return apple_count * 125
+    if event == 0:
+        return 1
+    if event == -1:
+        return -250
+    return 0
+
+def food_reward_v4(event, step_amount, apple_count):
+    if event == 1:
+        return apple_count * 125
+    if event == 0:
+        return 1/step_amount
+    if event == -1:
+        return -250
+    return 0
+
+def death_food_punishment(event, step_amount, apple_count):
+    if event == 1:
+        return apple_count * 100
+    if event == 0:
+        return 1/step_amount
+    if event == -1:
+        return -500 / (apple_count + 1)
+    

@@ -107,10 +107,17 @@ class SnakeEnv(gym.Env):
                     break
             ###print('next snake player {}'.format(self.current_snake))
         self.time_step += 1
+        
+        #SELF ADDED LOGIC
+        
         if rewards == 1:
             self.apple_count += 1
+            if self.apple_count > 1:
+                print('Eat apple: ', self.apple_count)
 
         rewards = self.reward_func(rewards, self.time_step, self.apple_count)
+        
+        
         if self.coordinate_based:
             return coord_obs, rewards, done, info
         else:  # pixel-based
