@@ -110,7 +110,7 @@ class SnakeEnv(gym.Env):
         if rewards == 1:
             self.apple_count += 1
 
-        rewards = self.reward_func(rewards, self.time_step, self.apple_count)
+        rewards = self.reward_func(rewards, self.time_step, self.apple_count, coord_obs)
         if self.coordinate_based:
             return coord_obs, rewards, done, info
         else:  # pixel-based
