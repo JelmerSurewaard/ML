@@ -11,9 +11,9 @@ def surviving_reward(event, step_amount):
 
 def food_reward(event, step_amount, apple_count):
     if event == 1:
-        return 100
+        return 1
     if event == -1:
-        return -250
+        return -1
     return 0
 
 def food_reward_v2(event, step_amount, apple_count):
