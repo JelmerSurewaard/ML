@@ -39,7 +39,7 @@ class RL_Agent:
         snake_env = DummyVecEnv([lambda: env])
         self.model = PPO2.load("learned_models/RLSnake_" + str(old_snake_id), verbose=1, tensorboard_log="./tensorboard_logs/RLSnake/")
         self.model.set_env(snake_env)
-        self.model.learn(timesteps)
+        self.model.learn(timesteps, tb_log_name=self.id)
         self.model.save("learned_models/RLSnake_" + str(self.id))
         
     def get_action(self, obs):
