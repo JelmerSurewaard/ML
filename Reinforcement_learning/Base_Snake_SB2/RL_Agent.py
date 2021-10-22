@@ -18,17 +18,22 @@ class RL_Agent:
         self.model.learn(timesteps)
         self.model.save("learned_models/RLSnake_" + str(self.id))
 
-    def train(self, env, timesteps):
-        policy_kwargs = dict(act_fun=tf.nn.relu, net_arch=[128,128])
-
-        #self.model = DQN("MlpPolicy", env, verbose=1, learning_rate=0.005, tensorboard_log="./tensorboard_logs/RLSnake/", exploration_final_eps=final_expo_rate, exploration_initial_eps=1, exploration_fraction=0.2)
-        self.model = PPO2("MlpPolicy", env, verbose=1, policy_kwargs=policy_kwargs, learning_rate=LinearSchedule( 40000 * 5, initial_p=0.0005, final_p=0.00005).value, tensorboard_log="./tensorboard_logs/RLSnake/")
-
+    def train(self, env, timesteps, final_expo_rate):
+        self.model = DQN("MlpPolicy", env, verbose=1, learning_rate=0.005, tensorboard_log="./tensorboard_logs/RLSnake/", exploration_final_eps=final_expo_rate, exploration_initial_eps=1, exploration_fraction=0.2)
+        
         self.model.learn(total_timesteps=timesteps, tb_log_name=self.id)
         self.model.save("learned_models\RLSnake_" + str(self.id))
         
     def load(self):
         self.model = PPO2.load("learned_models/RLSnake_" + str(self.id))
+        
+    def train_ppo(self, env, timesteps):
+        policy_kwargs = dict(act_fun=tf.nn.relu, net_arch=[128,128])
+
+        self.model = PPO2("MlpPolicy", env, verbose=1, policy_kwargs=policy_kwargs, learning_rate=LinearSchedule( 40000 * 5, initial_p=0.0005, final_p=0.00005).value, tensorboard_log="./tensorboard_logs/RLSnake/")
+
+        self.model.learn(total_timesteps=timesteps, tb_log_name=self.id)
+        self.model.save("learned_models\RLSnake_" + str(self.id))
 
     def train_exist_ppo(self, env, timesteps):
         snake_env = DummyVecEnv([lambda: env])
