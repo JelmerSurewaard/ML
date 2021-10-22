@@ -11,9 +11,9 @@ class RL_Agent:
         self.id = id
         self.final_expo_rate = final_expo_rate
         
-    def train_existing_model(self, env, timesteps):
+    def train_existing_model(self, old_snake_id, env, timesteps):
         custom_objects = {"exploration_initial_eps": 0.1, "exploration_final_eps": self.final_expo_rate, "exploration_fraction": 0.1}
-        self.model = DQN.load("learned_models/RLSnake_" + str(self.id), custom_objects=custom_objects)       
+        self.model = DQN.load("learned_models/RLSnake_" + str(old_snake_id), custom_objects=custom_objects)       
         self.model.set_env(env)
         self.model.learn(timesteps)
         self.model.save("learned_models/RLSnake_" + str(self.id))
@@ -35,9 +35,9 @@ class RL_Agent:
         self.model.learn(total_timesteps=timesteps, tb_log_name=self.id)
         self.model.save("learned_models\RLSnake_" + str(self.id))
 
-    def train_exist_ppo(self, env, timesteps):
+    def train_exist_ppo(self, old_snake_id, env, timesteps):
         snake_env = DummyVecEnv([lambda: env])
-        self.model = PPO2.load("learned_models/RLSnake_" + str(self.id), verbose=1, tensorboard_log="./tensorboard_logs/RLSnake/")
+        self.model = PPO2.load("learned_models/RLSnake_" + str(old_snake_id), verbose=1, tensorboard_log="./tensorboard_logs/RLSnake/")
         self.model.set_env(snake_env)
         self.model.learn(timesteps)
         self.model.save("learned_models/RLSnake_" + str(self.id))

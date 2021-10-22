@@ -22,12 +22,12 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-agent = RL_Agent("SB2-Super-Snake1", 0)
+agent = RL_Agent("SB2-Super-Snake1, S2", 0)
 
 env = SnakeEnv(grid_size=[6,6], snake_size=2, reward_func=rewards.food_reward)
 
-agent.train_ppo(env, timesteps=500000)
-#agent.train_existing_model(env, 300000)
+#agent.train_ppo(env, timesteps=500000)
+agent.train_exist_ppo('SB2-Super-Snake1',env, 500000)
 #agent.train_exist_ppo(env, timesteps=500000)
 #agent.load()
 
